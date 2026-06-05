@@ -1,0 +1,101 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #0b0b0b;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #fff;
+    overflow-x: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+header {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #ff2828; /* Rouge Ferrari */
+}
+
+/* Section du milieu avec défilement horizontal */
+.showroom-section {
+    width: 100%;
+    padding: 20px 0;
+}
+
+.cards-container {
+    display: flex;
+    gap: 40px;
+    overflow-x: auto;
+    padding: 20px 50px;
+    scroll-behavior: smooth;
+}
+
+/* Masquer la barre de défilement par défaut pour un look plus propre */
+.cards-container::-webkit-scrollbar {
+    height: 8px;
+}
+.cards-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 40, 40, 0.5);
+    border-radius: 4px;
+}
+
+/* Effet Glassmorphism sur les cartes */
+.card {
+    min-width: 350px;
+    max-width: 350px;
+    height: 450px;
+    background: rgba(255, 255, 255, 0.05); /* Fond blanc ultra transparent */
+    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(15px); /* Flou d'arrière-plan (Effet verre) */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Bordure fine brillante */
+    border-radius: 20px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    border-color: rgba(255, 40, 40, 0.4); /* Lueur rouge au survol */
+}
+
+/* Zone pour le modèle 3D */
+.card-canvas {
+    width: 100%;
+    height: 70%;
+    cursor: grab;
+}
+.card-canvas:active {
+    cursor: grabbing;
+}
+
+/* Infos sous le modèle */
+.card-info {
+    padding: 20px;
+    height: 30%;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.card-info h3 {
+    font-size: 1.3rem;
+    margin-bottom: 5px;
+}
+
+.card-info p {
+    font-size: 0.9rem;
+    color: #aaa;
+}
