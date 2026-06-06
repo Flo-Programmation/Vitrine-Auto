@@ -2,131 +2,173 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// Sélectionner toutes les zones de cartes 3D
-const cardElements = document.querySelectorAll('.card-canvas');
+// =========================================================================
+// 1. DONNÉES DES VÉHICULES
+// =========================================================================
+const carData = [
+    {
+        model: "assets/models/2022_ferrari_296_gtb.glb",
+        title: "Ferrari Monza SP3 Evo",
+        desc: "Moteur V12 Hybride | 950 ch | 0-100 km/h : 2.8s"
+    },
+    {
+        model: "assets/models/599obj.glb",
+        title: "Ferrari SF100 Vision",
+        desc: "Full Électrique | 1200 ch | Vitesse max : 350 km/h"
+    },
+    {
+        model: "assets/models/ferrari.glb",
+        title: "Ferrari F42 Aperta",
+        desc: "V8 Bi-turbo | 830 ch | Châssis Carbone Monocoque"
+    }
+];
 
-cardElements.forEach((container) => {
-    const modelPath = container.getAttribute('data-model');
-    initCard3D(container, modelPath);
-});
+let currentIndex = 0;
+const carDistance = 10; // Espace entre chaque voiture dans la scène 3D (en mètres)
 
-function initCard3D(container, modelPath) {
-    // 1. Scène locale à la carte
-    const scene = new THREE.Scene();
+// =========================================================================
+// 2. CONFIGURATION DE LA SCÈNE UNIQUE GÉANTE
+// =========================================================================
+const container = document.getElementById('showroom-canvas-container');
+const scene = new THREE.Scene();
 
-    // 2. Caméra adaptée à la taille de la carte
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 1.5, 4.5);
+const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 100);
+// Position de profil stricte par défaut face à la première voiture
+camera.position.set(0, 0.8, 5.0); 
 
-    // 3. Rendu (alpha: true permet de voir l'effet de verre transparent derrière le canvas)
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+container.appendChild(renderer.domElement);
 
-    // 4. Lumières
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
-    scene.add(ambientLight);
+// Lumières globales d'exposition
+scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+const spotLight1 = new THREE.DirectionalLight(0xffffff, 2);
+spotLight1.position.set(5, 10, 5);
+scene.add(spotLight1);
+const spotLight2 = new THREE.DirectionalLight(0xffffff, 1);
+spotLight2.position.set(-5, 5, -5);
+scene.add(spotLight2);
 
-    const dirLight1 = new THREE.DirectionalLight(0xffffff, 2);
-    dirLight1.position.set(5, 5, 5);
-    scene.add(dirLight1);
+// Contrôles de caméra (restreints pour garder une vue de profil globale propre)
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minDistance = 3;
+controls.maxDistance = 7;
+controls.maxPolarAngle = Math.PI / 2; // Empêche de passer sous le sol
 
-    const dirLight2 = new THREE.DirectionalLight(0xffffff, 1);
-    dirLight2.position.set(-5, 5, -5);
-    scene.add(dirLight2);
+// Cibles d'animation pour les flèches
+let targetCameraX = 0;
+let targetControlsX = 0;
 
-    // 5. Contraintes OrbitControls (Pas de zoom, pas de pan, rotation horizontale pure)
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    
-    controls.enableZoom = false; // Désactive le zoom (molette / pincement)
-    controls.enablePan = false;  // Désactive le déplacement avec le clic droit
-    
-    // Bloquer la rotation verticale (axe Y uniquement)
-    // En fixant l'angle polaire min et max à Pi/2 (90 degrés), la caméra reste bloquée à hauteur des yeux
-    controls.minPolarAngle = Math.PI / 2;
-    controls.maxPolarAngle = Math.PI / 2;
+// =========================================================================
+// 3. CHARGEMENT DES VOITURES ALIGNÉES
+// =========================================================================
+const loader = new GLTFLoader();
 
-    // 6. Chargement du modèle GLB unique
-    const loader = new GLTFLoader();
-    loader.load(modelPath, (gltf) => {
-        
-        // On clone proprement pour éviter les conflits
-        const model = gltf.scene.clone();
-        
-        // --- NOUVEAU : CALCUL DE L'ÉCHELLE AUTOMATIQUE ---
-        // 1. On mesure la taille actuelle du modèle aux extrêmes (X, Y, Z)
+carData.forEach((car, index) => {
+    loader.load(car.model, (gltf) => {
+        const model = gltf.scene;
+
+        // Échelle automatique
         const box = new THREE.Box3().setFromObject(model);
         const size = new THREE.Vector3();
-        box.getSize(size); // Récupère la largeur, hauteur, profondeur de la voiture
-
-        // 2. On choisit la taille maximale souhaitée dans la carte (ex: 2.5 unités)
-        const targetSize = 2.5; 
-        
-        // 3. On trouve la dimension la plus grande du modèle (souvent la longueur de la voiture)
+        box.getSize(size);
         const maxDim = Math.max(size.x, size.y, size.z);
-        
-        // 4. On calcule le ratio et on applique une échelle uniforme et parfaite
-        const scaleFactor = targetSize / maxDim;
+        const scaleFactor = 3.5 / maxDim; // Voiture très grande
         model.scale.set(scaleFactor, scaleFactor, scaleFactor);
-        
-        // -------------------------------------------------
-        // --- NOUVEAU : REDRESSER LA VOITURE SELON SON FICHIER ---
-        // ---------------------------------------------------------
-        if (modelPath.includes('599obj.glb')) {
-            // Si la voiture est debout sur le nez ou l'arrière, on la bascule de 90 degrés
-            // Math.PI / 2 correspond à un angle de 90° en radians
-            model.rotation.x = -Math.PI / 2; 
-            
-            // Si jamais elle est aussi de biais, tu pourras ajuster l'axe Y ou Z en décochant ici :
-            // model.rotation.y = Math.PI / 2;
+
+        // Correction d'axe pour la deuxième voiture
+        if (car.model.includes('599obj.glb')) {
+            model.rotation.x = -Math.PI / 2;
         }
-        // Recalculer la boîte englobante après la mise à l'échelle pour recentrer parfaitement
+
+        // Centrage du modèle sur lui-même
         const newBox = new THREE.Box3().setFromObject(model);
         const center = newBox.getCenter(new THREE.Vector3());
+        model.position.x = -center.x;
+        model.position.y = -center.y;
+        model.position.z = -center.z;
+
+        // Création d'un groupe pour positionner la voiture le long de l'axe X
+        const carGroup = new THREE.Group();
+        carGroup.add(model);
         
-        model.position.x += (model.position.x - center.x);
-        model.position.y += (model.position.y - center.y) - 0.2; // Légèrement abaissé au centre de la carte
-        model.position.z += (model.position.z - center.z);
+        // Aligner les voitures les unes à côté des autres (0m, 10m, 20m...)
+        carGroup.position.x = index * carDistance;
         
-        scene.add(model);
-    }, undefined, (error) => {
-        console.error("Erreur chargement carte :", error);
+        scene.add(carGroup);
     });
+});
 
-    // 7. Animation optimisée (S'arrête si la carte n'est pas visible)
-    let isVisible = true;
+// =========================================================================
+// 4. NAVIGATION PAR FLÈCHES (SYSTÈME DE SLIDER SLIDE)
+// =========================================================================
+const btnPrev = document.getElementById('arrow-prev');
+const btnNext = document.getElementById('arrow-next');
 
-    // On observe si la carte est visible à l'écran
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            isVisible = entry.isIntersecting; // Vrai si la carte est visible, Faux sinon
-        });
-    }, { threshold: 0.1 }); // Se déclenche dès que 10% de la carte est visible
-
-    observer.observe(container);
-
-    function animate() {
-        requestAnimationFrame(animate);
-        
-        // On n'exécute les calculs 3D QUE si la carte est visible
-        if (isVisible) {
-            controls.update();
-            renderer.render(scene, camera);
-        }
+btnNext.addEventListener('click', () => {
+    if (currentIndex < carData.length - 1) {
+        currentIndex++;
+        updateShowroom();
     }
-    animate();
+});
 
-    // Ajustement en cas de redimensionnement de la fenêtre
-    window.addEventListener('resize', () => {
-        const w = container.clientWidth;
-        const h = container.clientHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
-    });
+btnPrev.addEventListener('click', () => {
+    if (currentIndex > 0) {
+        currentIndex--;
+        updateShowroom();
+    }
+});
+
+function updateShowroom() {
+    const data = carData[currentIndex];
+    
+    // Mettre à jour l'interface HTML
+    document.getElementById('car-title').innerText = data.title;
+    document.getElementById('car-desc').innerText = data.desc;
+
+    // Calculer la nouvelle position X vers laquelle la caméra doit se déplacer
+    targetCameraX = currentIndex * carDistance;
+    targetControlsX = currentIndex * carDistance;
 }
+
+// =========================================================================
+// 5. BOUCLE D'ANIMATION (MOUVEMENT FLUIDE DE LA CAMÉRA)
+// =========================================================================
+function animate() {
+    requestAnimationFrame(animate);
+
+    // Interpolation linéaire (Lerp) pour faire glisser la caméra en douceur
+    camera.position.x += (targetCameraX - controls.target.x) * 0.08;
+    controls.target.x += (targetControlsX - controls.target.x) * 0.08;
+
+    controls.update();
+    renderer.render(scene, camera);
+}
+animate();
+
+// Gérer le redimensionnement de la fenêtre de manière réactive
+window.addEventListener('resize', () => {
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// =========================================================================
+// 6. GESTION DE LA FENÊTRE MODALE DÉTAILS
+// =========================================================================
+const modal = document.getElementById('tech-modal');
+const btnOpenDetails = document.getElementById('open-details-btn');
+const btnCloseModal = document.querySelector('.close-modal');
+
+btnOpenDetails.addEventListener('click', () => {
+    const data = carData[currentIndex];
+    document.getElementById('modal-title').innerText = data.title;
+    document.getElementById('modal-description').innerText = "Fiche technique détaillée de la " + data.title + ". Idéale pour afficher les performances avancées, le couple aérodynamique et les rapports de vitesse.";
+    modal.style.display = 'flex';
+});
+
+btnCloseModal.addEventListener('click', () => modal.style.display = 'none');
+window.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });

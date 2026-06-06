@@ -1,128 +1,106 @@
-* {
-    box-sizing: border-box;
+html, body {
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Arial', sans-serif;
+    background: #000;
 }
 
-body {
-    background-color: #0b0b0b;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #fff;
-    overflow-x: hidden;
-    height: 100vh;
+#bg-video {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    opacity: 0.4; /* Vidéo plus sombre pour faire ressortir la voiture 3D */
+}
+
+.showroom-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
 }
 
-header {
-    position: relative;
-    width: 100%;
-    height: 100vh; /* Prend 100% de la hauteur de l'écran */
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start; /* Aligne le titre vers le haut */
+.header-content {
+    text-align: center;
+    color: white;
     padding-top: 40px;
 }
+.header-content h1 { font-size: 3rem; text-transform: uppercase; margin-bottom: 5px; color: #ff2828; }
+.header-content p { font-size: 1.2rem; opacity: 0.8; }
 
-/* La vidéo prend tout l'écran en arrière-plan */
-#bg-video {
+#showroom-canvas-container {
     position: absolute;
-    top: 0;
-    left: 0;
+    top: 0; left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Recadre proprement la vidéo sans l'étirer */
-    z-index: -1; /* Place la vidéo DERRIÈRE le texte et les cartes */
-}
-
-/* Conteneur pour le texte */
-.header-content {
-    position: relative;
     z-index: 1;
-    text-align: center;
 }
 
-header h1 {
-    font-size: 2.5rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: #ff2828; /* Rouge Ferrari */
-    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.7); /* Ombre pour rendre le titre lisible sur la vidéo */
-}
-
-/* Section du milieu avec défilement horizontal */
-.showroom-section {
+/* Les flèches de ton croquis */
+.nav-arrow {
     position: absolute;
-    bottom: 5%; /* Aligne les cartes à 5% du bas de l'écran */
-    width: 100%;
-    z-index: 2; /* Passe devant la vidéo */
-    padding: 20px 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 2rem;
+    padding: 20px 25px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
-.cards-container {
-    display: flex;
-    gap: 40px;
-    overflow-x: auto;
-    padding: 20px 50px;
-    scroll-behavior: smooth;
+.nav-arrow:hover { background: #ff2828; border-color: #ff2828; scale: 1.1; }
+#arrow-prev { left: 40px; }
+#arrow-next { right: 40px; }
+
+#open-details-btn {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    background: #ff2828;
+    color: white;
+    border: none;
+    padding: 15px 35px;
+    font-size: 1.1rem;
+    border-radius: 30px;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: bold;
+    box-shadow: 0 10px 20px rgba(255,40,40,0.3);
 }
 
-/* Masquer la barre de défilement par défaut pour un look plus propre */
-.cards-container::-webkit-scrollbar {
-    height: 8px;
+/* Modale */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
 }
-.cards-container::-webkit-scrollbar-thumb {
-    background: rgba(255, 40, 40, 0.5);
-    border-radius: 4px;
-}
-
-/* Effet Glassmorphism sur les cartes */
-.card {
-    min-width: 350px;
-    max-width: 350px;
-    height: 450px;
-    background: rgba(255, 255, 255, 0.05); /* Fond blanc ultra transparent */
-    -webkit-backdrop-filter: blur(15px);
-    backdrop-filter: blur(15px); /* Flou d'arrière-plan (Effet verre) */
-    border: 1px solid rgba(255, 255, 255, 0.1); /* Bordure fine brillante */
+.modal-content {
+    background: rgba(20, 20, 20, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 90%; max-width: 500px;
     border-radius: 20px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.3s ease, border-color 0.3s ease;
+    padding: 30px;
+    color: white;
+    position: relative;
 }
-
-.card:hover {
-    transform: translateY(-10px);
-    border-color: rgba(255, 40, 40, 0.4); /* Lueur rouge au survol */
-}
-
-/* Zone pour le modèle 3D */
-.card-canvas {
-    width: 100%;
-    height: 70%;
-    cursor: grab;
-}
-.card-canvas:active {
-    cursor: grabbing;
-}
-
-/* Infos sous le modèle */
-.card-info {
-    padding: 20px;
-    height: 30%;
-    background: rgba(0, 0, 0, 0.2);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.card-info h3 {
-    font-size: 1.3rem;
-    margin-bottom: 5px;
-}
-
-.card-info p {
-    font-size: 0.9rem;
-    color: #aaa;
-}
+.close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.8rem; cursor: pointer; }
+.close-modal:hover { color: #ff2828; }

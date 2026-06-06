@@ -17,43 +17,35 @@
     </script>
 </head>
 <body>
-    <header>
-        <video src="assets/src/videos/bg-header.mp4" autoplay loop muted playsinline id="bg-video"></video>
-        
-        <div class="header-content">
-            <h1>Scuderia Ferrari Concept Exhibition</h1>
+    <video src="assets/src/videos/bg-header.mp4" autoplay loop muted playsinline id="bg-video"></video>
+
+    <main class="showroom-wrapper">
+        <header class="header-content">
+            <h1 id="car-title">Ferrari Monza SP3 Evo</h1>
+            <p id="car-desc">Moteur V12 Hybride | 950 ch | 0-100 km/h : 2.8s</p>
+        </header>
+
+        <div id="showroom-canvas-container"></div>
+
+        <button id="arrow-prev" class="nav-arrow">◀</button>
+        <button id="arrow-next" class="nav-arrow">▶</button>
+    </main>
+
+    <div id="tech-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-body">
+                <div class="modal-info">
+                    <h2 id="modal-title">Modèle</h2>
+                    <hr>
+                    <p id="modal-description">Spécifications techniques avancées...</p>
+                </div>
+            </div>
         </div>
-    </header>
+    </div>
 
-    <section class="showroom-section">
-        <div class="cards-container">
-            
-            <div class="card">
-                <div class="card-canvas" data-model="assets/models/2022_ferrari_296_gtb.glb"></div>
-                <div class="card-info">
-                    <h3>Ferrari Monza SP3 Evo</h3>
-                    <p>Moteur V12 Hybride | 950 ch</p>
-                </div>
-            </div>
+    <button id="open-details-btn">Voir la fiche technique</button>
 
-            <div class="card">
-                <div class="card-canvas" data-model="assets/models/599obj.glb"></div>
-                <div class="card-info">
-                    <h3>Ferrari SF100 Vision</h3>
-                    <p>Full Électrique | 1200 ch</p>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-canvas" data-model="assets/models/ferrari.glb"></div>
-                <div class="card-info">
-                    <h3>Ferrari F42 Aperta</h3>
-                    <p>V8 Bi-turbo | 830 ch</p>
-                </div>
-            </div>
-
-        </div>
-    </section>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>
