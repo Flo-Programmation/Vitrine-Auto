@@ -18,14 +18,18 @@
 </head>
 <body>
     <header>
-        <h1>Scuderia Ferrari Concept Exhibition</h1>
+        <video src="assets/src/videos/bg-header.mp4" autoplay loop muted playsinline id="bg-video"></video>
+        
+        <div class="header-content">
+            <h1>Scuderia Ferrari Concept Exhibition</h1>
+        </div>
     </header>
 
     <section class="showroom-section">
         <div class="cards-container">
             
             <div class="card">
-                <div class="card-canvas" data-model="assets/models/ferrari.glb"></div>
+                <div class="card-canvas" data-model="assets/models/2022_ferrari_296_gtb.glb"></div>
                 <div class="card-info">
                     <h3>Ferrari Monza SP3 Evo</h3>
                     <p>Moteur V12 Hybride | 950 ch</p>
@@ -33,7 +37,7 @@
             </div>
 
             <div class="card">
-                <div class="card-canvas" data-model="assets/models/ferrari.glb"></div>
+                <div class="card-canvas" data-model="assets/models/599obj.glb"></div>
                 <div class="card-info">
                     <h3>Ferrari SF100 Vision</h3>
                     <p>Full Électrique | 1200 ch</p>

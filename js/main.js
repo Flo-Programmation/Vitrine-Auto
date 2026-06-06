@@ -54,15 +54,43 @@ function initCard3D(container, modelPath) {
     // 6. Chargement du modèle GLB unique
     const loader = new GLTFLoader();
     loader.load(modelPath, (gltf) => {
-        const model = gltf.scene;
-        // ---- AJOUTE CETTE LIGNE POUR GROSSIR L'OBJET ----
-        model.scale.set(1.5, 1.5, 1.5); // 1.5 multiplie la taille par 1.5 (Ajuste la valeur si besoin)
-        // -------------------------------------------------
-        // Centrer automatiquement le modèle dans la carte
+        
+        // On clone proprement pour éviter les conflits
+        const model = gltf.scene.clone();
+        
+        // --- NOUVEAU : CALCUL DE L'ÉCHELLE AUTOMATIQUE ---
+        // 1. On mesure la taille actuelle du modèle aux extrêmes (X, Y, Z)
         const box = new THREE.Box3().setFromObject(model);
-        const center = box.getCenter(new THREE.Vector3());
+        const size = new THREE.Vector3();
+        box.getSize(size); // Récupère la largeur, hauteur, profondeur de la voiture
+
+        // 2. On choisit la taille maximale souhaitée dans la carte (ex: 2.5 unités)
+        const targetSize = 2.5; 
+        
+        // 3. On trouve la dimension la plus grande du modèle (souvent la longueur de la voiture)
+        const maxDim = Math.max(size.x, size.y, size.z);
+        
+        // 4. On calcule le ratio et on applique une échelle uniforme et parfaite
+        const scaleFactor = targetSize / maxDim;
+        model.scale.set(scaleFactor, scaleFactor, scaleFactor);
+        
+        // -------------------------------------------------
+        // --- NOUVEAU : REDRESSER LA VOITURE SELON SON FICHIER ---
+        // ---------------------------------------------------------
+        if (modelPath.includes('599obj.glb')) {
+            // Si la voiture est debout sur le nez ou l'arrière, on la bascule de 90 degrés
+            // Math.PI / 2 correspond à un angle de 90° en radians
+            model.rotation.x = -Math.PI / 2; 
+            
+            // Si jamais elle est aussi de biais, tu pourras ajuster l'axe Y ou Z en décochant ici :
+            // model.rotation.y = Math.PI / 2;
+        }
+        // Recalculer la boîte englobante après la mise à l'échelle pour recentrer parfaitement
+        const newBox = new THREE.Box3().setFromObject(model);
+        const center = newBox.getCenter(new THREE.Vector3());
+        
         model.position.x += (model.position.x - center.x);
-        model.position.y += (model.position.y - center.y) - 0.2; // Légèrement abaissé
+        model.position.y += (model.position.y - center.y) - 0.2; // Légèrement abaissé au centre de la carte
         model.position.z += (model.position.z - center.z);
         
         scene.add(model);
@@ -70,11 +98,26 @@ function initCard3D(container, modelPath) {
         console.error("Erreur chargement carte :", error);
     });
 
-    // 7. Animation propre à cette carte
+    // 7. Animation optimisée (S'arrête si la carte n'est pas visible)
+    let isVisible = true;
+
+    // On observe si la carte est visible à l'écran
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            isVisible = entry.isIntersecting; // Vrai si la carte est visible, Faux sinon
+        });
+    }, { threshold: 0.1 }); // Se déclenche dès que 10% de la carte est visible
+
+    observer.observe(container);
+
     function animate() {
         requestAnimationFrame(animate);
-        controls.update();
-        renderer.render(scene, camera);
+        
+        // On n'exécute les calculs 3D QUE si la carte est visible
+        if (isVisible) {
+            controls.update();
+            renderer.render(scene, camera);
+        }
     }
     animate();
 
